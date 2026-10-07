@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="slotly.client/slotly.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="Slotly.Server/Slotly.Server.csproj" />
+</Solution>

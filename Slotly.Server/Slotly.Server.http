@@ -1,0 +1,6 @@
+@Slotly.Server_HostAddress = http://localhost:5232
+
+GET {{Slotly.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
