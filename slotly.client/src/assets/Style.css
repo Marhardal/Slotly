@@ -1,1 +1,455 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: #080c14;
+    color: #e2e8f0;
+    overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  html.light body {
+    background-color: #f8fafc;
+    color: #1e293b;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.65);
+}
+
+/* Glassmorphism helpers - Dark Mode Default */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================================================
+   LIGHT MODE DESIGN SYSTEM: High-contrast, elegant, and crisp
+   ========================================================================= */
+
+/* Header & Announcement Banner */
+html.light header {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-bottom-color: #e2e8f0 !important;
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+html.light header .announcement-banner {
+  background: linear-gradient(to right, #eff6ff, #f5f3ff, #f8fafc) !important;
+  border-bottom-color: #e2e8f0 !important;
+  color: #4338ca !important;
+}
+
+html.light header .announcement-banner span {
+  color: #475569 !important;
+}
+
+html.light header .announcement-banner .text-white {
+  color: #1e293b !important;
+}
+
+html.light header nav {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Glass cards & panels in light mode */
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+html.light .glass-card {
+  background: #ffffff !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 16px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Inner containers & sub-boxes in light mode */
+html.light [class*="bg-slate-950"],
+html.light [class*="bg-slate-900"] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light [class*="bg-slate-800"] {
+  background-color: #edf2f7 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* All dark slate borders and dividers switch to clean light gray */
+html.light [class*="border-slate-800"],
+html.light [class*="border-slate-700"],
+html.light [class*="border-slate-900"],
+html.light [class*="divide-slate-800"],
+html.light [class*="divide-slate-700"] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Dropdown menus & Modals */
+html.light .fixed.bg-black\/70 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+}
+
+html.light header .bg-slate-900\/95 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Floating Toasts in Light Mode */
+html.light .fixed.bottom-6 .bg-slate-900\/95 {
+  background-color: #ffffff !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* =========================================================================
+   CATEGORY 1: SOLID COLORED BUTTONS & ACCENTS (ALWAYS PURE WHITE TEXT)
+   ========================================================================= */
+html.light button.bg-indigo-600,
+html.light button.bg-indigo-600 *,
+html.light .bg-indigo-600,
+html.light .bg-indigo-600 *,
+html.light button.bg-emerald-600,
+html.light button.bg-emerald-600 *,
+html.light .bg-emerald-600,
+html.light .bg-emerald-600 *,
+html.light button.bg-purple-600,
+html.light button.bg-purple-600 *,
+html.light .bg-purple-600,
+html.light .bg-purple-600 *,
+html.light button[style*="background-color"],
+html.light button[style*="background-color"] *,
+html.light [style*="background-color"].text-white,
+html.light [style*="background-color"].text-white *,
+html.light [class*="bg-gradient-to-r from-indigo"],
+html.light [class*="bg-gradient-to-r from-indigo"] *,
+html.light [class*="bg-gradient-to-r from-emerald"],
+html.light [class*="bg-gradient-to-r from-emerald"] *,
+html.light [class*="bg-gradient-to-tr from-indigo"],
+html.light [class*="bg-gradient-to-tr from-indigo"] * {
+  color: #ffffff !important;
+}
+
+/* SVG icons on colored buttons must remain white */
+html.light button.bg-indigo-600 svg,
+html.light .bg-indigo-600 svg,
+html.light button.bg-emerald-600 svg,
+html.light .bg-emerald-600 svg,
+html.light button[style*="background-color"] svg,
+html.light [style*="background-color"].text-white svg,
+html.light [class*="bg-gradient-to-r from-indigo"] svg,
+html.light [class*="bg-gradient-to-r from-emerald"] svg,
+html.light [class*="bg-gradient-to-tr from-indigo"] svg {
+  stroke: #ffffff !important;
+}
+
+/* =========================================================================
+   CATEGORY 2: SECONDARY / SLATE BUTTONS & TOGGLES (CRISP DARK TEXT)
+   ========================================================================= */
+html.light button[class*="bg-slate-800"],
+html.light button[class*="bg-slate-900"],
+html.light a[class*="bg-slate-800"],
+html.light a[class*="bg-slate-900"] {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light button[class*="bg-slate-800"]:hover,
+html.light button[class*="bg-slate-900"]:hover,
+html.light a[class*="bg-slate-800"]:hover,
+html.light a[class*="bg-slate-900"]:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.light button[class*="bg-slate-800"] svg,
+html.light button[class*="bg-slate-900"] svg {
+  stroke: #475569 !important;
+}
+
+html.light button[class*="bg-slate-800"]:hover svg,
+html.light button[class*="bg-slate-900"]:hover svg {
+  stroke: #0f172a !important;
+}
+
+/* Active Tenant Pill in Landing page */
+html.light .active-tenant-pill {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* =========================================================================
+   TYPOGRAPHY & TEXT CONTRAST IN LIGHT MODE
+   ========================================================================= */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: #0f172a !important;
+}
+
+html.light p {
+  color: #475569;
+}
+
+/* Text white on regular cards/headers becomes dark slate */
+html.light :not(button.bg-indigo-600):not(button.bg-emerald-600):not(button.bg-purple-600):not(button[style*="background-color"]):not(.bg-indigo-600):not(.bg-emerald-600):not(.bg-purple-600):not([style*="background-color"]):not([class*="bg-gradient-to-r from-indigo"]):not([class*="bg-gradient-to-r from-emerald"]):not([class*="bg-gradient-to-tr from-indigo"]).text-white {
+  color: #0f172a !important;
+}
+
+/* Slate text levels */
+html.light .text-slate-100 { color: #0f172a !important; }
+html.light .text-slate-200 { color: #1e293b !important; }
+html.light .text-slate-300 { color: #334155 !important; }
+html.light .text-slate-400 { color: #64748b !important; }
+html.light .text-slate-500 { color: #94a3b8 !important; }
+
+/* Links and unselected buttons hovering text-white must turn dark */
+html.light :not(button.bg-indigo-600):not(button.bg-emerald-600):not(button.bg-purple-600):not(button[style*="background-color"]):not([class*="bg-gradient-to-r from-indigo"])[class*="hover:text-white"]:hover {
+  color: #0f172a !important;
+}
+
+/* =========================================================================
+   ACCENT & STATUS TINT COLORS (HIGH-CONTRAST IN LIGHT MODE)
+   ========================================================================= */
+/* Indigo */
+html.light .text-indigo-300,
+html.light .text-indigo-400 {
+  color: #4338ca !important;
+}
+html.light .text-indigo-200 {
+  color: #3730a3 !important;
+}
+html.light [class*="bg-indigo-950"],
+html.light [class*="bg-indigo-900"],
+html.light .bg-indigo-500\/10,
+html.light .bg-indigo-500\/20 {
+  background-color: #eef2ff !important;
+  color: #4338ca !important;
+  border-color: #c7d2fe !important;
+}
+
+/* Emerald */
+html.light .text-emerald-300,
+html.light .text-emerald-400 {
+  color: #047857 !important;
+}
+html.light .text-emerald-200 {
+  color: #065f46 !important;
+}
+html.light [class*="bg-emerald-950"],
+html.light [class*="bg-emerald-900"],
+html.light .bg-emerald-500\/10,
+html.light .bg-emerald-500\/20 {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+/* Amber */
+html.light .text-amber-300,
+html.light .text-amber-400 {
+  color: #b45309 !important;
+}
+html.light .text-amber-200 {
+  color: #92400e !important;
+}
+html.light [class*="bg-amber-950"],
+html.light [class*="bg-amber-900"],
+html.light .bg-amber-500\/10,
+html.light .bg-amber-500\/20 {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+/* Cyan */
+html.light .text-cyan-300,
+html.light .text-cyan-400 {
+  color: #0e7490 !important;
+}
+html.light [class*="bg-cyan-950"],
+html.light [class*="bg-cyan-900"],
+html.light .bg-cyan-500\/10,
+html.light .bg-cyan-500\/20 {
+  background-color: #ecfeff !important;
+  color: #0e7490 !important;
+  border-color: #a5f3fc !important;
+}
+
+/* Purple */
+html.light .text-purple-300,
+html.light .text-purple-400 {
+  color: #6d28d9 !important;
+}
+html.light [class*="bg-purple-950"],
+html.light [class*="bg-purple-900"] {
+  background-color: #f5f3ff !important;
+  border-color: #ddd6fe !important;
+}
+
+/* Rose */
+html.light .text-rose-300,
+html.light .text-rose-400 {
+  color: #be123c !important;
+}
+html.light [class*="bg-rose-950"],
+html.light [class*="bg-rose-900"],
+html.light .bg-rose-500\/10,
+html.light .bg-rose-500\/20 {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border-color: #fecdd3 !important;
+}
+
+/* Forms, Inputs, Dropdowns in light mode */
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Tables in light mode */
+html.light table thead tr {
+  background-color: #f8fafc !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light table thead th {
+  color: #475569 !important;
+}
+
+html.light table tbody tr:hover {
+  background-color: #f1f5f9 !important;
+}
+
+html.light footer {
+  background-color: #ffffff !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+/* Card hover animation */
+.glass-card-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-hover:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Ambient glow backgrounds */
+.glow-indigo {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+}
+
+.glow-purple {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0) 70%);
+}
+
+.glow-emerald {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0) 70%);
+}
+
+/* Animated gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.light .text-gradient {
+  background: linear-gradient(135deg, #0f172a 0%, #334155 50%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-primary {
+  background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.light .text-gradient-primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-cyan {
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

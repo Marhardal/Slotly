@@ -1,0 +1,14 @@
+public class ServiceModel
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public Guid TenantID { get; set; }  
+
+    public string Name { get; set; }
+
+    public string Description { get; set; }
+
+    public DateTimeOffset createdAt { get; set; } = DateTimeOffset.UtcNow();
+
+    public DateTimeOffset updatedAt { get; set; } = DateTimeOffset.UtcNow();
+}
