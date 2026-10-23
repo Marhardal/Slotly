@@ -365,3 +365,4 @@ slotly.client/obj
 slotly.client/bin
 Slotly.Server/bin
 Slotly.Server/obj
+Slotly.Server/Migrations

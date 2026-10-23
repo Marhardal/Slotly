@@ -14,6 +14,8 @@ public class StatusModel
     
     public DateTimeOffset updatedOn { get; set; } = DateTimeOffset.UtcNow;
 
+    public ICollection<BookingModel>? Bookings { get; set; }
+
 }
 
 

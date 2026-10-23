@@ -15,4 +15,6 @@ public class ServiceAddOnsModel
     public DateTimeOffset createdOn { get; set; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset updatedOn { get; set; } = DateTimeOffset.UtcNow;
+
+    public ServiceModel? Service { get; set; }
 }

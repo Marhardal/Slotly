@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Company.ClassLibrary1;
+namespace Slotly.Server;
 
 public class ServiceModel
 {
@@ -21,4 +21,10 @@ public class ServiceModel
     public DateTimeOffset createdOn { get; set; } = DateTimeOffset.UtcNow;
     
     public DateTimeOffset updatedOn { get; set; } = DateTimeOffset.UtcNow;
+
+    public ICollection<BookingModel>? Bookings { get; set; }
+
+    public ICollection<ServiceAddOnsModel>? serviceAddOns { get; set; }
+
+    public CategoryModel? Category  { get; set; }
 }

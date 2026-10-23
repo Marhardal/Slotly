@@ -20,4 +20,7 @@ public class BookingModel
 
     public DateTimeOffset updatedOn { get; set; } = DateTimeOffset.UtcNow;
 
+    public ServiceModel? Service { get; set; }
+
+    public StatusModel? Status { get; set; }
 }

@@ -13,6 +13,8 @@ public class CategoryModel
     public DateTimeOffset createdOn { get; set; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset updatedOn { get; set; } = DateTimeOffset.UtcNow;
+
+    public ICollection<ServiceModel>? Services { get; set; }
 }
 
 
