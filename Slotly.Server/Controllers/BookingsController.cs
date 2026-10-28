@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Slotly.Server;
+using Slotly.Server.Seeds;
 
 namespace Slotly.Server.Controllers
 {
@@ -51,6 +52,17 @@ namespace Slotly.Server.Controllers
                 return BadRequest();
             }
 
+            if (!await _context.Services.AnyAsync(service => service.ID == bookingModel.ServiceID))
+            {
+                return NotFound($"Service with ID '{bookingModel.ServiceID}' was not found.");
+            }
+
+            if (!await _context.Statuses.AnyAsync(status =>
+                    status.ID == bookingModel.statusID && status.Category == Category.Bookings))
+            {
+                return NotFound($"Booking status with ID '{bookingModel.statusID}' was not found.");
+            }
+
             _context.Entry(bookingModel).State = EntityState.Modified;
 
             try
@@ -77,6 +89,32 @@ namespace Slotly.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<BookingModel>> PostBookingModel(BookingModel bookingModel)
         {
+            if (!await _context.Services.AnyAsync(service => service.ID == bookingModel.ServiceID))
+            {
+                return NotFound($"Service with ID '{bookingModel.ServiceID}' was not found.");
+            }
+
+            if (bookingModel.statusID == Guid.Empty)
+            {
+                var pendingStatus = await _context.Statuses
+                    .SingleOrDefaultAsync(status =>
+                        status.ID == StatusSeed.PendingId && status.Category == Category.Bookings);
+
+                if (pendingStatus == null)
+                {
+                    return Problem(
+                        detail: "The default Pending booking status is missing.",
+                        statusCode: StatusCodes.Status500InternalServerError);
+                }
+
+                bookingModel.statusID = pendingStatus.ID;
+            }
+            else if (!await _context.Statuses.AnyAsync(status =>
+                         status.ID == bookingModel.statusID && status.Category == Category.Bookings))
+            {
+                return NotFound($"Booking status with ID '{bookingModel.statusID}' was not found.");
+            }
+
             _context.Bookings.Add(bookingModel);
             await _context.SaveChangesAsync();
 

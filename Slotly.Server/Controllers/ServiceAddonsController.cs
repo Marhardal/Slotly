@@ -51,6 +51,11 @@ namespace Slotly.Server.Controllers
                 return BadRequest();
             }
 
+            if (!await _context.Services.AnyAsync(service => service.ID == serviceAddOnsModel.ServiceID))
+            {
+                return NotFound($"Service with ID '{serviceAddOnsModel.ServiceID}' was not found.");
+            }
+
             _context.Entry(serviceAddOnsModel).State = EntityState.Modified;
 
             try
@@ -77,6 +82,11 @@ namespace Slotly.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<ServiceAddOnsModel>> PostServiceAddOnsModel(ServiceAddOnsModel serviceAddOnsModel)
         {
+            if (!await _context.Services.AnyAsync(service => service.ID == serviceAddOnsModel.ServiceID))
+            {
+                return NotFound($"Service with ID '{serviceAddOnsModel.ServiceID}' was not found.");
+            }
+
             _context.ServiceAddOns.Add(serviceAddOnsModel);
             await _context.SaveChangesAsync();
 

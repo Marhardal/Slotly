@@ -53,7 +53,10 @@ public class DBContext : IdentityDbContext<IdentityUser, IdentityRole, string>
         modelBuilder.Entity<CategoryModel>().HasData(
             CategorySeed.GetSeedData()
         );
+
+        modelBuilder.Entity<StatusModel>().HasData(
+            StatusSeed.GetSeedData()
+        );
     }
 
 }
-

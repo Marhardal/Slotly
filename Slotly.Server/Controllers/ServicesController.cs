@@ -51,6 +51,11 @@ namespace Slotly.Server.Controllers
                 return BadRequest();
             }
 
+            if (!await _context.Categories.AnyAsync(category => category.ID == serviceModel.CategoryID))
+            {
+                return NotFound($"Category with ID '{serviceModel.CategoryID}' was not found.");
+            }
+
             _context.Entry(serviceModel).State = EntityState.Modified;
 
             try
@@ -77,6 +82,11 @@ namespace Slotly.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<ServiceModel>> PostServiceModel(ServiceModel serviceModel)
         {
+            if (!await _context.Categories.AnyAsync(category => category.ID == serviceModel.CategoryID))
+            {
+                return NotFound($"Category with ID '{serviceModel.CategoryID}' was not found.");
+            }
+
             _context.Services.Add(serviceModel);
             await _context.SaveChangesAsync();
 
