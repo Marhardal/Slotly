@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Slotly.Server.Seeds;
 
 namespace Slotly.Server;
 
@@ -48,7 +49,14 @@ public class DBContext : IdentityDbContext<IdentityUser, IdentityRole, string>
         .WithOne(s => s.Service)
         .HasForeignKey(s => s.ServiceID)
         .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CategoryModel>().HasData(
+            CategorySeed.GetSeedData()
+        );
+
+        modelBuilder.Entity<StatusModel>().HasData(
+            StatusSeed.GetSeedData()
+        );
     }
 
 }
-

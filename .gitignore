@@ -366,3 +366,8 @@ slotly.client/bin
 Slotly.Server/bin
 Slotly.Server/obj
 Slotly.Server/Migrations
+!Slotly.Server/Migrations/
+Slotly.Server/Migrations/*
+!Slotly.Server/Migrations/20261028161047_SeedBookingStatuses.cs
+!Slotly.Server/Migrations/20261028161047_SeedBookingStatuses.Designer.cs
+!Slotly.Server/Migrations/DBContextModelSnapshot.cs
