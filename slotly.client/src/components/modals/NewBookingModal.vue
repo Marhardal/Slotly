@@ -4,7 +4,7 @@
       <div class="flex items-center justify-between pb-4 border-b border-slate-800">
         <div>
           <h3 class="text-base font-bold text-white">Create New Appointment</h3>
-          <p class="text-xs text-slate-400">Manual booking with transaction calculation</p>
+          <p class="text-xs text-slate-400">Create a booking request for this tenant</p>
         </div>
         <button @click="$emit('close')" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
           <Icon name="x" size="18" />
@@ -121,9 +121,10 @@
           </button>
           <button
             type="submit"
+            :disabled="isSubmitting || currentServices.length === 0"
             class="px-5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/30"
           >
-            Create Appointment
+            {{ isSubmitting ? 'Saving...' : 'Create Appointment' }}
           </button>
         </div>
       </form>
@@ -142,16 +143,18 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
-const { currentServices, currentStaff, createBooking } = useSlotly()
+const { currentServices, currentStaff, createBooking, showToast } = useSlotly()
 
 const name = ref('')
 const email = ref('')
 const phone = ref('')
 const serviceId = ref(currentServices.value[0]?.id || '')
 const staffId = ref(currentStaff.value[0]?.id || '')
-const date = ref('2026-10-14')
+const today = new Date()
+const date = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`)
 const time = ref('10:00 AM')
 const notes = ref('')
+const isSubmitting = ref(false)
 
 watch(() => props.isOpen, (open) => {
   if (open) {
@@ -160,50 +163,40 @@ watch(() => props.isOpen, (open) => {
   }
 })
 
-function submitManualBooking() {
+async function submitManualBooking() {
   const service = currentServices.value.find(s => s.id === serviceId.value)
   const staff = currentStaff.value.find(st => st.id === staffId.value)
-  const basePrice = service?.price || 100
-  const tax = Number((basePrice * 0.085).toFixed(2))
-  const grandTotal = basePrice + tax
+  if (!service) {
+    showToast('Could Not Create Booking', 'Select a service that is available in the backend catalog.', 'error')
+    return
+  }
 
-  createBooking({
-    clientName: name.value,
-    clientEmail: email.value,
-    clientPhone: phone.value,
-    serviceId: serviceId.value,
-    serviceName: service?.name || 'Standard Service',
-    staffId: staffId.value,
-    staffName: staff?.name || 'Staff Member',
-    date: date.value,
-    time: time.value,
-    duration: service?.durationMinutes || 60,
-    price: grandTotal,
-    pricing: {
-      basePrice,
-      addons: [],
-      addonsTotal: 0,
-      discount: 0,
-      discountCode: null,
-      subtotal: basePrice,
-      tax,
-      processingFee: 0,
-      tip: 0,
-      grandTotal,
-      paymentOption: 'in_person',
-      depositAmount: 0,
-      balanceDue: grandTotal,
-      paymentMethod: 'Manual / In-Person',
-      transactionId: `TXN-${Math.floor(10000 + Math.random() * 90000)}`
-    },
-    notes: notes.value
-  })
+  isSubmitting.value = true
+  try {
+    await createBooking({
+      clientName: name.value,
+      clientEmail: email.value,
+      clientPhone: phone.value,
+      serviceId: serviceId.value,
+      serviceName: service.name,
+      staffId: staffId.value,
+      staffName: staff?.name || 'Staff Member',
+      date: date.value,
+      time: time.value,
+      duration: service.durationMinutes,
+      price: service.price,
+      notes: notes.value
+    })
 
-  // Reset & close
-  name.value = ''
-  email.value = ''
-  phone.value = ''
-  notes.value = ''
-  emit('close')
+    name.value = ''
+    email.value = ''
+    phone.value = ''
+    notes.value = ''
+    emit('close')
+  } catch (error) {
+    showToast('Could Not Create Booking', error.message, 'error')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>

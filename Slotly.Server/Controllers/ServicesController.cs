@@ -22,9 +22,15 @@ namespace Slotly.Server.Controllers
 
         // GET: api/Services
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ServiceModel>>> GetServices()
+        public async Task<ActionResult<IEnumerable<ServiceModel>>> GetServices(Guid? tenantId)
         {
-            return await _context.Services.ToListAsync();
+            var services = _context.Services.AsNoTracking();
+            if (tenantId.HasValue)
+            {
+                services = services.Where(service => service.TenantID == tenantId.Value);
+            }
+
+            return await services.ToListAsync();
         }
 
         // GET: api/Services/5
@@ -54,6 +60,11 @@ namespace Slotly.Server.Controllers
             if (!await _context.Categories.AnyAsync(category => category.ID == serviceModel.CategoryID))
             {
                 return NotFound($"Category with ID '{serviceModel.CategoryID}' was not found.");
+            }
+
+            if (serviceModel.TenantID == Guid.Empty)
+            {
+                return BadRequest("A tenant ID is required.");
             }
 
             _context.Entry(serviceModel).State = EntityState.Modified;
@@ -87,6 +98,11 @@ namespace Slotly.Server.Controllers
                 return NotFound($"Category with ID '{serviceModel.CategoryID}' was not found.");
             }
 
+            if (serviceModel.TenantID == Guid.Empty)
+            {
+                return BadRequest("A tenant ID is required.");
+            }
+
             _context.Services.Add(serviceModel);
             await _context.SaveChangesAsync();
 
@@ -95,12 +111,18 @@ namespace Slotly.Server.Controllers
 
         // DELETE: api/Services/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteServiceModel(Guid id)
+        public async Task<IActionResult> DeleteServiceModel(Guid id, Guid tenantId)
         {
-            var serviceModel = await _context.Services.FindAsync(id);
+            var serviceModel = await _context.Services
+                .SingleOrDefaultAsync(service => service.ID == id && service.TenantID == tenantId);
             if (serviceModel == null)
             {
                 return NotFound();
+            }
+
+            if (await _context.Bookings.AnyAsync(booking => booking.ServiceID == id))
+            {
+                return Conflict("A service with bookings cannot be deleted.");
             }
 
             _context.Services.Remove(serviceModel);

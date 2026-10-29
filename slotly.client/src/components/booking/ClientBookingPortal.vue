@@ -57,28 +57,27 @@
         </div>
       </div>
 
-      <!-- SUCCESS CONFIRMATION STATE (WITH COMPLETE ITEMIZED TRANSACTION RECEIPT) -->
+      <!-- Booking request confirmation -->
       <div v-if="confirmedBooking" class="glass-card rounded-2xl p-6 sm:p-10 text-center max-w-2xl mx-auto border-emerald-500/30">
         <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto mb-4 animate-bounce">
           <Icon name="check" size="32" />
         </div>
         <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-          Transaction Processed & Confirmed
+          Booking Request Submitted
         </span>
         <h2 class="text-2xl sm:text-3xl font-bold text-white mt-3">You're All Set!</h2>
         <p class="text-slate-300 text-sm mt-1 max-w-md mx-auto">
-          An itemized digital tax invoice and booking pass have been dispatched to 
-          <span class="text-white font-medium">{{ confirmedBooking.clientEmail }}</span>.
+          Your request is saved for {{ confirmedBooking.clientEmail }}. The tenant will review and confirm it.
         </p>
 
-        <!-- Digital Appointment Ticket Pass with Transaction Breakdown -->
+        <!-- Booking request summary -->
         <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 my-8 text-left relative overflow-hidden shadow-2xl">
           <!-- Top Header -->
           <div class="border-b border-slate-800 pb-4 mb-4 flex justify-between items-start">
             <div>
               <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
                 <Icon name="receipt" size="14" class="text-indigo-400" />
-                <span>Verified Booking Pass</span>
+                <span>Booking Request</span>
               </div>
               <div class="text-lg font-bold text-white mt-0.5">{{ confirmedBooking.serviceName }}</div>
               <div class="text-xs text-slate-400 mt-0.5">With {{ confirmedBooking.staffName }}</div>
@@ -87,7 +86,7 @@
               <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-indigo-300 font-semibold">
                 {{ confirmedBooking.pricing?.transactionId || confirmedBooking.id }}
               </span>
-              <div class="text-xs text-emerald-400 font-medium mt-1">Status: Confirmed</div>
+              <div class="text-xs text-amber-300 font-medium mt-1">Status: {{ confirmedBooking.status }}</div>
             </div>
           </div>
 
@@ -106,20 +105,20 @@
               <div class="font-semibold text-white mt-1">{{ confirmedBooking.duration >= 60 ? `${(confirmedBooking.duration/60).toFixed(1)} Hours` : `${confirmedBooking.duration} Mins` }}</div>
             </div>
             <div>
-              <div class="text-slate-400">Payment Option</div>
+              <div class="text-slate-400">Payment</div>
               <div class="font-semibold text-indigo-300 mt-1 capitalize">
-                {{ confirmedBooking.pricing?.paymentOption === 'deposit' ? 'Deposit Paid' : confirmedBooking.pricing?.paymentOption === 'in_person' ? 'Pay In Person' : 'Paid In Full' }}
+                Not collected
               </div>
             </div>
           </div>
 
           <!-- Itemized Financial Breakdown Ledger -->
           <div class="py-4 border-b border-slate-800/80 text-xs space-y-2">
-            <div class="text-[11px] uppercase tracking-wider font-bold text-slate-400">Itemized Transaction Receipt</div>
+            <div class="text-[11px] uppercase tracking-wider font-bold text-slate-400">Service Price Estimate</div>
             
             <div class="flex justify-between text-slate-300">
               <span>{{ confirmedBooking.serviceName }} (Base Fee)</span>
-              <span>${{ Number(confirmedBooking.pricing?.basePrice || 0).toFixed(2) }}</span>
+              <span>${{ Number(confirmedBooking.pricing?.basePrice || confirmedBooking.price || 0).toFixed(2) }}</span>
             </div>
 
             <div 
@@ -136,35 +135,12 @@
               <span>-${{ Number(confirmedBooking.pricing?.discount).toFixed(2) }}</span>
             </div>
 
-            <div class="flex justify-between text-slate-400 text-[11px]">
-              <span>Tax & Surcharges ({{ currentTenant.settings.taxRatePercent }}%)</span>
-              <span>+${{ Number(confirmedBooking.pricing?.tax || 0).toFixed(2) }}</span>
-            </div>
-
-            <div class="flex justify-between text-slate-400 text-[11px]">
-              <span>Processing Fee</span>
-              <span>+${{ Number(confirmedBooking.pricing?.processingFee || 0).toFixed(2) }}</span>
-            </div>
-
-            <div v-if="confirmedBooking.pricing?.tip > 0" class="flex justify-between text-slate-300 text-[11px]">
-              <span>Gratuity / Tip</span>
-              <span>+${{ Number(confirmedBooking.pricing?.tip).toFixed(2) }}</span>
-            </div>
-
             <div class="pt-2 flex justify-between font-bold text-white text-sm border-t border-slate-800">
-              <span>Total Transaction Value</span>
-              <span>${{ Number(confirmedBooking.pricing?.grandTotal || 0).toFixed(2) }} USD</span>
+              <span>Service and Add-ons</span>
+              <span>${{ Number(confirmedBooking.price || 0).toFixed(2) }} USD</span>
             </div>
 
-            <div class="flex justify-between text-emerald-400 font-semibold pt-1">
-              <span>Amount Charged Now ({{ confirmedBooking.pricing?.paymentMethod }})</span>
-              <span>${{ Number(confirmedBooking.pricing?.depositAmount || 0).toFixed(2) }}</span>
-            </div>
-
-            <div v-if="confirmedBooking.pricing?.balanceDue > 0" class="flex justify-between text-amber-400 font-semibold">
-              <span>Remaining Balance Due at Arrival</span>
-              <span>${{ Number(confirmedBooking.pricing?.balanceDue).toFixed(2) }}</span>
-            </div>
+            <p class="pt-2 text-[11px] text-slate-400">No payment was collected. The final amount and payment method will be confirmed by the tenant.</p>
           </div>
 
           <div class="mt-4 flex items-center justify-between text-xs text-slate-400">
@@ -202,7 +178,7 @@
             <span :class="{ 'text-white font-semibold': step === 1 }">1. Choose Service / Venue</span>
             <span :class="{ 'text-white font-semibold': step === 2 }">2. Specialist & Date</span>
             <span :class="{ 'text-white font-semibold': step === 3 }">3. Time Slot</span>
-            <span :class="{ 'text-white font-semibold': step === 4 }">4. Details & Billing</span>
+            <span :class="{ 'text-white font-semibold': step === 4 }">4. Details & Request</span>
           </div>
           <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
             <div 
@@ -506,7 +482,7 @@
               class="px-6 py-2.5 rounded-xl text-xs font-semibold text-white transition-all flex items-center gap-2"
               :class="selectedTime ? 'bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-slate-500 cursor-not-allowed'"
             >
-              <span>Continue to Intake & Transaction Billing</span>
+              <span>Continue to Booking Details</span>
               <Icon name="arrow-right" size="14" />
             </button>
           </div>
@@ -516,7 +492,7 @@
         <div v-else-if="step === 4" class="space-y-6">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-xl font-bold text-white">Review & Complete Transaction</h2>
+              <h2 class="text-xl font-bold text-white">Review & Submit Booking</h2>
               <p class="text-xs text-slate-400 mt-0.5">Customize add-ons, review transparent pricing, and choose payment terms</p>
             </div>
             <button @click="step = 3" class="text-xs text-slate-400 hover:text-white transition-colors">
@@ -595,12 +571,12 @@
                 <Icon name="sparkles" size="14" class="text-indigo-400" />
                 <span>Customize Your Reservation (Optional Enhancements)</span>
               </span>
-              <span class="text-[11px] text-slate-400">Adds to transaction total</span>
+              <span class="text-[11px] text-slate-400">Adds to the booking price</span>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div
-                v-for="addon in currentAddons"
+                v-for="addon in availableAddons"
                 :key="addon.id"
                 @click="toggleAddon(addon)"
                 class="cursor-pointer p-3.5 rounded-xl border text-xs transition-all flex items-start justify-between gap-3"
@@ -727,12 +703,12 @@
               </div>
             </div>
 
-            <!-- LIVE REAL-TIME ITEMIZED TRANSACTION LEDGER -->
+            <!-- Preview-only pricing estimate -->
             <div class="p-5 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-slate-800 shadow-xl space-y-2.5 text-xs">
               <div class="flex items-center justify-between pb-2 border-b border-slate-800">
                 <span class="font-bold text-white text-sm flex items-center gap-1.5">
                   <Icon name="receipt" size="16" class="text-indigo-400" />
-                  <span>Transaction Pricing Breakdown</span>
+                  <span>Estimated Price Preview</span>
                 </span>
                 <span class="text-[11px] text-slate-400 font-mono">Currency: {{ currentTenant.settings.currency }}</span>
               </div>
@@ -774,119 +750,14 @@
 
               <!-- Grand Total -->
               <div class="pt-3 border-t border-slate-800 flex justify-between items-center text-sm font-bold text-white">
-                <span>Total Transaction Amount</span>
+                <span>Estimated Total</span>
                 <span class="text-base text-indigo-300 font-mono">${{ Number(calculatedPricing.grandTotal).toFixed(2) }} USD</span>
               </div>
             </div>
 
-            <!-- PAYMENT OPTIONS / TERMS SELECTION -->
-            <div class="space-y-3">
-              <span class="text-xs font-bold text-white uppercase tracking-wider block">Choose Payment Terms</span>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <!-- Option 1: Full Payment -->
-                <div
-                  @click="paymentOption = 'full'"
-                  class="cursor-pointer p-3.5 rounded-xl border text-xs transition-all"
-                  :class="paymentOption === 'full' ? 'bg-indigo-950/40 border-indigo-500 shadow-md' : 'bg-slate-900/60 border-slate-800 hover:bg-slate-800/50'"
-                >
-                  <div class="font-bold text-white">Pay in Full Today</div>
-                  <div class="text-[11px] text-slate-400 mt-1">Instant complete checkout</div>
-                  <div class="font-bold text-emerald-400 mt-2">${{ Number(calculatedPricing.grandTotal).toFixed(2) }}</div>
-                </div>
-
-                <!-- Option 2: Deposit -->
-                <div
-                  @click="paymentOption = 'deposit'"
-                  class="cursor-pointer p-3.5 rounded-xl border text-xs transition-all"
-                  :class="paymentOption === 'deposit' ? 'bg-indigo-950/40 border-indigo-500 shadow-md' : 'bg-slate-900/60 border-slate-800 hover:bg-slate-800/50'"
-                >
-                  <div class="font-bold text-white">Pay {{ currentTenant.settings.depositPercent }}% Deposit</div>
-                  <div class="text-[11px] text-slate-400 mt-1">Balance due at arrival</div>
-                  <div class="font-bold text-indigo-300 mt-2">
-                    ${{ Number(calculatedPricing.depositAmount).toFixed(2) }}
-                    <span class="text-[10px] text-slate-500 block">Due later: ${{ Number(calculatedPricing.balanceDue).toFixed(2) }}</span>
-                  </div>
-                </div>
-
-                <!-- Option 3: Pay at Venue -->
-                <div
-                  @click="paymentOption = 'in_person'"
-                  class="cursor-pointer p-3.5 rounded-xl border text-xs transition-all"
-                  :class="paymentOption === 'in_person' ? 'bg-indigo-950/40 border-indigo-500 shadow-md' : 'bg-slate-900/60 border-slate-800 hover:bg-slate-800/50'"
-                >
-                  <div class="font-bold text-white">Pay at Venue / Check-In</div>
-                  <div class="text-[11px] text-slate-400 mt-1">Card held to guarantee</div>
-                  <div class="font-bold text-amber-400 mt-2">$0.00 today</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- PAYMENT CARD INPUT DETAILS -->
-            <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-white flex items-center gap-1.5">
-                  <Icon name="credit-card" size="14" class="text-indigo-400" />
-                  <span>Card Information</span>
-                </span>
-                <button
-                  type="button"
-                  @click="fillTestCard"
-                  class="text-[11px] font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-500/30"
-                >
-                  Autofill Test Card
-                </button>
-              </div>
-
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1">Cardholder Name</label>
-                <input
-                  v-model="cardholderName"
-                  required
-                  type="text"
-                  placeholder="Vivienne St. Claire"
-                  class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div class="grid grid-cols-3 gap-2">
-                <div class="col-span-2">
-                  <label class="block text-[11px] text-slate-400 mb-1">Card Number</label>
-                  <input
-                    v-model="cardNumber"
-                    required
-                    type="text"
-                    maxlength="19"
-                    placeholder="4242 •••• •••• 4242"
-                    class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label class="block text-[11px] text-slate-400 mb-1">Exp & CVC</label>
-                  <div class="flex gap-1">
-                    <input
-                      v-model="cardExp"
-                      required
-                      type="text"
-                      placeholder="MM/YY"
-                      maxlength="5"
-                      class="w-1/2 bg-slate-900 border border-slate-700/80 rounded-xl px-2 py-2 text-xs text-white font-mono text-center focus:outline-none focus:border-indigo-500"
-                    />
-                    <input
-                      v-model="cardCvc"
-                      required
-                      type="text"
-                      placeholder="CVC"
-                      maxlength="4"
-                      class="w-1/2 bg-slate-900 border border-slate-700/80 rounded-xl px-2 py-2 text-xs text-white font-mono text-center focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-1.5 text-[11px] text-slate-400 pt-1">
-                <Icon name="lock" size="12" class="text-emerald-400" />
-                <span>256-bit SSL encrypted. Payment routed under tenant Stripe Connect merchant account.</span>
-              </div>
+            <div class="p-4 rounded-xl bg-amber-950/30 border border-amber-500/20 text-xs text-amber-200">
+              Payment processing is not connected. Do not enter card details; no payment will be collected.
+              The amount above is a preview, and the tenant will confirm the final price.
             </div>
 
             <!-- Guarantee Policy -->
@@ -913,12 +784,8 @@
                 <Icon v-if="isSubmitting" name="refresh" size="14" class="animate-spin" />
                 <span>
                   {{ isSubmitting 
-                    ? 'Processing Transaction...' 
-                    : paymentOption === 'deposit'
-                      ? `Pay Deposit $${calculatedPricing.depositAmount.toFixed(2)} & Reserve`
-                      : paymentOption === 'in_person'
-                        ? 'Reserve with Card on File ($0.00 today)'
-                        : `Pay $${calculatedPricing.grandTotal.toFixed(2)} & Confirm`
+                    ? 'Saving Booking Request...'
+                    : 'Submit Booking Request'
                   }}
                 </span>
               </button>
@@ -951,7 +818,7 @@ const {
 const step = ref(1)
 const selectedService = ref(null)
 const selectedStaff = ref(null)
-const selectedDate = ref('2026-10-14')
+const selectedDate = ref(getLocalDateString())
 const selectedTime = ref('10:00 AM')
 
 // Step 1 Filtering
@@ -965,6 +832,13 @@ const availableCategories = computed(() => {
   })
   return Array.from(set)
 })
+
+function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 const filteredServices = computed(() => {
   return currentServices.value.filter(s => {
@@ -982,9 +856,13 @@ const filteredServices = computed(() => {
   })
 })
 
+const availableAddons = computed(() => currentAddons.value.filter(addon =>
+  addon.serviceId === selectedService.value?.id))
+
 // DIRECT BUTTON ACTION ON SERVICE CARD: Select & Jump directly to Step 2
 function chooseServiceAndProceed(service) {
   selectedService.value = service
+  selectedAddons.value = []
   step.value = 2
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -1014,11 +892,6 @@ const clientName = ref('')
 const clientEmail = ref('')
 const clientPhone = ref('')
 const clientNotes = ref('')
-const cardholderName = ref('Vivienne St. Claire')
-const cardNumber = ref('4242 •••• •••• 4242')
-const cardExp = ref('12/28')
-const cardCvc = ref('123')
-
 const isSubmitting = ref(false)
 const confirmedBooking = ref(null)
 
@@ -1051,14 +924,6 @@ function removeCoupon() {
   appliedCoupon.value = null
   couponInput.value = ''
   showToast('Coupon Removed', 'Discount removed from transaction total', 'info')
-}
-
-function fillTestCard() {
-  cardholderName.value = clientName.value || 'Vivienne St. Claire'
-  cardNumber.value = '4242 •••• •••• 4242'
-  cardExp.value = '12/28'
-  cardCvc.value = '882'
-  showToast('Test Card Injected', 'Stripe mock test card credentials filled', 'info')
 }
 
 // REAL-TIME TRANSACTION PRICING ENGINE
@@ -1120,21 +985,22 @@ const calculatedPricing = computed(() => {
     paymentOption: paymentOption.value,
     depositAmount,
     balanceDue,
-    paymentMethod: paymentOption.value === 'in_person' ? 'Pay at Venue' : `Visa ending in ${cardNumber.value.slice(-4) || '4242'}`
+    paymentMethod: 'Not collected'
   }
 })
 
-// Generate next 7 dates starting from 2026-10-14
+// Generate the next seven dates from today.
 const upcomingDates = computed(() => {
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  const base = new Date('2026-10-14T00:00:00')
+  const base = new Date()
+  base.setHours(0, 0, 0, 0)
   const list = []
 
   for (let i = 0; i < 7; i++) {
     const d = new Date(base)
     d.setDate(base.getDate() + i)
-    const dateString = d.toISOString().split('T')[0]
+    const dateString = getLocalDateString(d)
     list.push({
       dateString,
       dayName: days[d.getDay()],
@@ -1149,11 +1015,12 @@ function formatDate(dateStr) {
   if (!dateStr) return ''
   const parts = dateStr.split('-')
   if (parts.length !== 3) return dateStr
-  const d = new Date(dateStr)
+  const [year, month, day] = parts.map(Number)
+  const d = new Date(year, month - 1, day)
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function handleBookingSubmit() {
+async function handleBookingSubmit() {
   isSubmitting.value = true
 
   const fullNotes = [
@@ -1161,8 +1028,8 @@ function handleBookingSubmit() {
     isVenueOrSpace(selectedService.value) ? `[Venue: ${venueGuests.value} guests, Event: ${venueEventType.value}, Setup: ${venueSetup.value}]` : null
   ].filter(Boolean).join(' | ')
 
-  setTimeout(() => {
-    const booking = createBooking({
+  try {
+    const booking = await createBooking({
       clientName: clientName.value,
       clientEmail: clientEmail.value,
       clientPhone: clientPhone.value,
@@ -1173,14 +1040,17 @@ function handleBookingSubmit() {
       date: selectedDate.value,
       time: selectedTime.value,
       duration: selectedService.value?.durationMinutes,
-      price: calculatedPricing.value.grandTotal,
-      pricing: { ...calculatedPricing.value, transactionId: `TXN-${Math.floor(10000 + Math.random() * 90000)}` },
+      price: selectedService.value?.price,
+      addons: selectedAddons.value,
       notes: fullNotes
     })
 
     confirmedBooking.value = booking
+  } catch (error) {
+    showToast('Could Not Save Booking', error.message, 'error')
+  } finally {
     isSubmitting.value = false
-  }, 650)
+  }
 }
 
 function resetBookingForm() {

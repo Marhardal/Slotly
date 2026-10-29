@@ -25,7 +25,7 @@
           <div class="flex items-center gap-3 text-xs text-slate-400 mt-1">
             <span class="font-mono text-indigo-300">{{ currentTenant.subdomain }}</span>
             <span>•</span>
-            <span class="text-emerald-400 font-medium">Auto-Sync Live</span>
+            <span class="text-slate-400 font-medium">Catalog & bookings use the backend API</span>
             <span>•</span>
             <span>{{ currentBookings.length }} Active Appointments</span>
           </div>

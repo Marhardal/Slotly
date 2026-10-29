@@ -1,8 +1,22 @@
 import { ref, reactive, computed } from 'vue'
 import { initialTenants, promoCodes } from '../data/mockData'
+import { slotlyApi } from '../services/api'
+
+const backendTenantIds = {
+  'tenant-aura': 'a1000000-0000-4000-8000-000000000001',
+  'tenant-luminary': 'a1000000-0000-4000-8000-000000000002',
+  'tenant-apex': 'a1000000-0000-4000-8000-000000000003',
+  'tenant-nexcode': 'a1000000-0000-4000-8000-000000000004'
+}
 
 // Global shared state
 const tenants = reactive(JSON.parse(JSON.stringify(initialTenants)))
+const backendData = reactive({
+  categories: [],
+  statuses: [],
+  tenants: {},
+  loading: {}
+})
 const currentTenantId = ref('tenant-aura')
 const currentView = ref('landing') // 'landing' | 'client-portal' | 'tenant-dashboard'
 const activeDashboardTab = ref('overview') // 'overview' | 'calendar' | 'bookings' | 'services' | 'staff' | 'settings'
@@ -97,6 +111,8 @@ function logoutUser() {
 
 // Toast notification system
 const toasts = ref([])
+let referenceDataRequest
+let referenceDataLoaded = false
 
 function showToast(title, message, type = 'success') {
   const id = Date.now() + Math.random()
@@ -110,9 +126,133 @@ function removeToast(id) {
   toasts.value = toasts.value.filter(t => t.id !== id)
 }
 
+function loadReferenceData() {
+  if (referenceDataLoaded) {
+    return Promise.resolve()
+  }
+
+  if (!referenceDataRequest) {
+    referenceDataRequest = Promise.all([
+      slotlyApi.getCategories(),
+      slotlyApi.getStatuses()
+    ]).then(([categories, statuses]) => {
+      backendData.categories = categories
+      backendData.statuses = statuses
+      referenceDataLoaded = true
+    }).finally(() => {
+      referenceDataRequest = null
+    })
+  }
+
+  return referenceDataRequest
+}
+
+function mapService(service) {
+  const category = backendData.categories.find(item => item.id === service.categoryID)
+  return {
+    id: service.id,
+    categoryID: service.categoryID,
+    name: service.name,
+    category: category?.name || 'Uncategorized',
+    durationMinutes: service.duration,
+    price: service.price,
+    description: service.description || '',
+    popular: service.popular,
+    icon: 'sparkles'
+  }
+}
+
+function formatTime(time) {
+  if (!time) return ''
+  const [hours, minutes] = time.split(':').map(Number)
+  const suffix = hours >= 12 ? 'PM' : 'AM'
+  return `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${suffix}`
+}
+
+function mapBooking(booking, services) {
+  const service = services.find(item => item.id === booking.serviceID)
+  const status = backendData.statuses.find(item => item.id === booking.statusID)
+  const addons = (booking.addOns || []).map(addon => ({
+    id: addon.id,
+    name: addon.name,
+    price: addon.price
+  }))
+  const addonsTotal = addons.reduce((total, addon) => total + addon.price, 0)
+  const basePrice = Math.max(0, booking.price - addonsTotal)
+  return {
+    id: booking.id,
+    clientName: booking.clientName || 'Client',
+    clientEmail: booking.clientEmail || '',
+    clientPhone: booking.clientPhone || '',
+    serviceId: booking.serviceID,
+    serviceName: service?.name || 'Service unavailable',
+    staffId: booking.staffID || '',
+    staffName: booking.staffName || 'Unassigned',
+    date: booking.date,
+    time: formatTime(booking.time),
+    duration: booking.duration,
+    price: booking.price,
+    status: (status?.name || 'Pending').toLowerCase(),
+    notes: booking.notes || '',
+    createdAt: booking.createdOn,
+    pricing: {
+      basePrice,
+      addons,
+      addonsTotal,
+      grandTotal: booking.price,
+      paymentOption: 'not_processed',
+      paymentMethod: 'Not collected'
+    },
+    statusID: booking.statusID
+  }
+}
+
+async function loadTenantData(tenantId = currentTenantId.value) {
+  if (backendData.tenants[tenantId]) return backendData.tenants[tenantId]
+  if (backendData.loading[tenantId]) return backendData.loading[tenantId]
+
+  const backendTenantId = backendTenantIds[tenantId]
+  if (!backendTenantId) {
+    throw new Error(`No backend tenant mapping exists for '${tenantId}'.`)
+  }
+
+  backendData.loading[tenantId] = (async () => {
+    await loadReferenceData()
+    const [services, addons, bookings] = await Promise.all([
+      slotlyApi.getServices(backendTenantId),
+      slotlyApi.getAddons(backendTenantId),
+      slotlyApi.getBookings(backendTenantId)
+    ])
+    const mappedServices = services.map(mapService)
+    const data = {
+      services: mappedServices,
+      addons: addons.map(addon => ({
+        id: addon.id,
+        serviceId: addon.serviceID,
+        name: addon.name,
+        description: addon.description || '',
+        price: addon.price,
+        durationMinutes: addon.duration
+      })),
+      bookings: bookings.map(booking => mapBooking(booking, mappedServices))
+    }
+    backendData.tenants[tenantId] = data
+    return data
+  })()
+
+  try {
+    return await backendData.loading[tenantId]
+  } finally {
+    delete backendData.loading[tenantId]
+  }
+}
+
 // Initialize theme once on script load
 if (typeof window !== 'undefined') {
   initTheme()
+  loadTenantData().catch(error => {
+    showToast('Backend Connection Failed', error.message, 'error')
+  })
 }
 
 export function useSlotly() {
@@ -121,11 +261,13 @@ export function useSlotly() {
   })
 
   const currentBookings = computed(() => {
-    return currentTenant.value ? currentTenant.value.bookings : []
+    return backendData.tenants[currentTenantId.value]?.bookings ??
+      (currentTenant.value ? currentTenant.value.bookings : [])
   })
 
   const currentServices = computed(() => {
-    return currentTenant.value ? currentTenant.value.services : []
+    return backendData.tenants[currentTenantId.value]?.services ??
+      (currentTenant.value ? currentTenant.value.services : [])
   })
 
   const currentStaff = computed(() => {
@@ -133,14 +275,18 @@ export function useSlotly() {
   })
 
   const currentAddons = computed(() => {
-    return currentTenant.value ? (currentTenant.value.addons || []) : []
+    return backendData.tenants[currentTenantId.value]?.addons ??
+      (currentTenant.value ? (currentTenant.value.addons || []) : [])
   })
+
+  const currentCategories = computed(() => backendData.categories)
+  const isBackendLoaded = computed(() => Boolean(backendData.tenants[currentTenantId.value]))
 
   // Dynamic dashboard stats computed from live bookings and transactions
   const computedStats = computed(() => {
     if (!currentTenant.value) return { totalRevenue: 0, totalBookings: 0, confirmed: 0, pending: 0 }
     
-    const bks = currentTenant.value.bookings
+    const bks = currentBookings.value
     const totalRev = bks.reduce((acc, curr) => {
       if (curr.status !== 'cancelled') {
         const val = curr.pricing?.grandTotal ?? curr.price ?? 0
@@ -154,8 +300,12 @@ export function useSlotly() {
     const completedCount = bks.filter(b => b.status === 'completed').length
 
     return {
-      revenue: totalRev + (currentTenant.value.stats.revenueMonth || 0),
-      totalBookings: bks.length + (currentTenant.value.stats.bookingsMonth || 0),
+      revenue: backendData.tenants[currentTenantId.value]
+        ? totalRev
+        : totalRev + (currentTenant.value.stats.revenueMonth || 0),
+      totalBookings: backendData.tenants[currentTenantId.value]
+        ? bks.length
+        : bks.length + (currentTenant.value.stats.bookingsMonth || 0),
       confirmedCount,
       pendingCount,
       completedCount,
@@ -169,6 +319,9 @@ export function useSlotly() {
     if (tenants.some(t => t.id === tenantId)) {
       currentTenantId.value = tenantId
       showToast('Switched Tenant', `Now active in ${currentTenant.value.name}`, 'info')
+      loadTenantData(tenantId).catch(error => {
+        showToast('Backend Connection Failed', error.message, 'error')
+      })
     }
   }
 
@@ -181,83 +334,125 @@ export function useSlotly() {
     activeDashboardTab.value = tab
   }
 
-  function createBooking(payload) {
-    if (!currentTenant.value) return null
+  async function createBooking(payload) {
+    if (!currentTenant.value) throw new Error('No tenant is selected.')
+    await loadTenantData()
 
-    const transactionId = payload.pricing?.transactionId || `TXN-${Math.floor(10000 + Math.random() * 90000)}`
-    const grandTotal = payload.pricing?.grandTotal ?? payload.price ?? 100
+    const tenantId = backendTenantIds[currentTenantId.value]
+    const timeMatch = payload.time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
+    if (!timeMatch) throw new Error('Choose a valid booking time.')
+    let hour = Number(timeMatch[1]) % 12
+    if (timeMatch[3].toUpperCase() === 'PM') hour += 12
 
-    const newBooking = {
-      id: `bk-${Math.floor(1000 + Math.random() * 9000)}`,
+    const created = await slotlyApi.createBooking({
+      tenantID: tenantId,
+      serviceID: payload.serviceId,
+      statusID: '00000000-0000-0000-0000-000000000000',
+      date: payload.date,
+      time: `${String(hour).padStart(2, '0')}:${timeMatch[2]}:00`,
       clientName: payload.clientName,
       clientEmail: payload.clientEmail,
       clientPhone: payload.clientPhone || '',
-      serviceId: payload.serviceId,
-      serviceName: payload.serviceName,
-      staffId: payload.staffId,
-      staffName: payload.staffName,
-      date: payload.date,
-      time: payload.time,
-      duration: payload.duration || 60,
-      price: grandTotal,
-      pricing: payload.pricing || {
-        basePrice: payload.price || 100,
-        addons: [],
-        addonsTotal: 0,
-        discount: 0,
-        discountCode: null,
-        subtotal: payload.price || 100,
-        tax: Number(((payload.price || 100) * 0.085).toFixed(2)),
-        processingFee: 2.50,
-        tip: 0,
-        grandTotal: grandTotal,
-        paymentOption: 'full',
-        depositAmount: grandTotal,
-        balanceDue: 0,
-        paymentMethod: 'Credit Card',
-        transactionId
-      },
-      status: payload.status || 'confirmed',
+      staffID: payload.staffId || '',
+      staffName: payload.staffName || '',
       notes: payload.notes || '',
-      createdAt: new Date().toISOString()
-    }
+      addOnIDs: (payload.addons || []).map(addon => addon.id)
+    })
 
-    currentTenant.value.bookings.unshift(newBooking)
-    showToast(
-      'Transaction Processed!',
-      `Receipt #${transactionId} generated for ${payload.clientName} ($${Number(grandTotal).toFixed(2)} USD).`,
-      'success'
-    )
+    const newBooking = mapBooking(created, backendData.tenants[currentTenantId.value].services)
+    backendData.tenants[currentTenantId.value].bookings.unshift(newBooking)
+    showToast('Booking Request Saved', 'Your booking request is recorded. Payment has not been processed.', 'success')
     return newBooking
   }
 
-  function updateBookingStatus(bookingId, status) {
-    const booking = currentTenant.value.bookings.find(b => b.id === bookingId)
-    if (booking) {
-      booking.status = status
-      showToast('Status Updated', `Booking #${bookingId} marked as ${status}.`, 'info')
+  async function updateBookingStatus(bookingId, status) {
+    await loadTenantData()
+    const tenantData = backendData.tenants[currentTenantId.value]
+    const booking = tenantData.bookings.find(item => item.id === bookingId)
+    const targetStatus = backendData.statuses.find(item =>
+      item.name?.toLowerCase() === status.toLowerCase() && item.category === 1)
+    if (!booking || !targetStatus) {
+      throw new Error(`Could not find booking '${bookingId}' or status '${status}'.`)
     }
+
+    const tenantId = backendTenantIds[currentTenantId.value]
+    const timeMatch = booking.time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
+    let hour = Number(timeMatch[1]) % 12
+    if (timeMatch[3].toUpperCase() === 'PM') hour += 12
+    await slotlyApi.updateBooking({
+      id: booking.id,
+      tenantID: tenantId,
+      serviceID: booking.serviceId,
+      statusID: targetStatus.id,
+      date: booking.date,
+      time: `${String(hour).padStart(2, '0')}:${timeMatch[2]}:00`,
+      clientName: booking.clientName,
+      clientEmail: booking.clientEmail,
+      clientPhone: booking.clientPhone,
+      staffID: booking.staffId,
+      staffName: booking.staffName,
+      duration: booking.duration,
+      price: booking.price,
+      notes: booking.notes
+    })
+    booking.status = status.toLowerCase()
+    booking.statusID = targetStatus.id
+    showToast('Status Updated', `Booking #${bookingId} marked as ${status}.`, 'info')
   }
 
-  function addService(serviceData) {
-    const newService = {
-      id: `srv-${Date.now()}`,
+  async function addService(serviceData) {
+    await loadTenantData()
+    const created = await slotlyApi.createService({
+      tenantID: backendTenantIds[currentTenantId.value],
+      categoryID: serviceData.categoryID,
       name: serviceData.name,
-      category: serviceData.category || 'General',
-      durationMinutes: Number(serviceData.durationMinutes) || 60,
-      price: Number(serviceData.price) || 100,
       description: serviceData.description || '',
-      popular: Boolean(serviceData.popular),
-      icon: 'sparkles'
-    }
-    currentTenant.value.services.push(newService)
+      duration: Number(serviceData.durationMinutes),
+      price: Number(serviceData.price),
+      popular: Boolean(serviceData.popular)
+    })
+    const newService = mapService(created)
+    backendData.tenants[currentTenantId.value].services.push(newService)
     showToast('Service Created', `Added ${newService.name} to catalog.`, 'success')
     return newService
   }
 
-  function deleteService(serviceId) {
-    currentTenant.value.services = currentTenant.value.services.filter(s => s.id !== serviceId)
+  async function deleteService(serviceId) {
+    await loadTenantData()
+    await slotlyApi.deleteService(serviceId, backendTenantIds[currentTenantId.value])
+    backendData.tenants[currentTenantId.value].services =
+      backendData.tenants[currentTenantId.value].services.filter(service => service.id !== serviceId)
     showToast('Service Removed', 'The service was removed from the catalog.', 'info')
+  }
+
+  async function addAddon(addonData) {
+    await loadTenantData()
+    const created = await slotlyApi.createAddon({
+      serviceID: addonData.serviceID,
+      name: addonData.name,
+      description: addonData.description || '',
+      price: Number(addonData.price),
+      duration: Number(addonData.durationMinutes) || 0
+    })
+    const newAddon = {
+      id: created.id,
+      serviceId: created.serviceID,
+      name: created.name,
+      description: created.description || '',
+      price: created.price,
+      durationMinutes: created.duration
+    }
+    backendData.tenants[currentTenantId.value].addons.push(newAddon)
+    showToast('Add-on Created', `Added ${newAddon.name} to the service.`, 'success')
+    return newAddon
+  }
+
+  async function deleteAddon(addonId) {
+    await loadTenantData()
+    await slotlyApi.deleteAddon(addonId)
+    backendData.tenants[currentTenantId.value].addons =
+      backendData.tenants[currentTenantId.value].addons.filter(addon => addon.id !== addonId)
+    showToast('Add-on Removed', 'The add-on was removed from the catalog.', 'info')
   }
 
   function addStaffMember(staffData) {
@@ -289,6 +484,8 @@ export function useSlotly() {
     currentServices,
     currentStaff,
     currentAddons,
+    currentCategories,
+    isBackendLoaded,
     computedStats,
     currentView,
     activeDashboardTab,
@@ -314,7 +511,10 @@ export function useSlotly() {
     updateBookingStatus,
     addService,
     deleteService,
+    addAddon,
+    deleteAddon,
     addStaffMember,
-    updateTenantSettings
+    updateTenantSettings,
+    loadTenantData
   }
 }

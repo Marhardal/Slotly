@@ -23,16 +23,25 @@ namespace Slotly.Server.Controllers
 
         // GET: api/Bookings
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BookingModel>>> GetBookings()
+        public async Task<ActionResult<IEnumerable<BookingModel>>> GetBookings(Guid tenantId)
         {
-            return await _context.Bookings.ToListAsync();
+            return await _context.Bookings
+                .AsNoTracking()
+                .Include(booking => booking.AddOns)
+                .Where(booking => booking.TenantID == tenantId)
+                .OrderBy(booking => booking.Date)
+                .ThenBy(booking => booking.Time)
+                .ToListAsync();
         }
 
         // GET: api/Bookings/5
         [HttpGet("{id}")]
         public async Task<ActionResult<BookingModel>> GetBookingModel(Guid id)
         {
-            var bookingModel = await _context.Bookings.FindAsync(id);
+            var bookingModel = await _context.Bookings
+                .AsNoTracking()
+                .Include(booking => booking.AddOns)
+                .SingleOrDefaultAsync(booking => booking.ID == id);
 
             if (bookingModel == null)
             {
@@ -52,9 +61,11 @@ namespace Slotly.Server.Controllers
                 return BadRequest();
             }
 
-            if (!await _context.Services.AnyAsync(service => service.ID == bookingModel.ServiceID))
+            var existingBooking = await _context.Bookings.SingleOrDefaultAsync(booking =>
+                booking.ID == id && booking.TenantID == bookingModel.TenantID);
+            if (existingBooking == null)
             {
-                return NotFound($"Service with ID '{bookingModel.ServiceID}' was not found.");
+                return NotFound();
             }
 
             if (!await _context.Statuses.AnyAsync(status =>
@@ -63,23 +74,9 @@ namespace Slotly.Server.Controllers
                 return NotFound($"Booking status with ID '{bookingModel.statusID}' was not found.");
             }
 
-            _context.Entry(bookingModel).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!BookingModelExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            existingBooking.statusID = bookingModel.statusID;
+            existingBooking.updatedOn = DateTimeOffset.UtcNow;
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
@@ -89,9 +86,11 @@ namespace Slotly.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<BookingModel>> PostBookingModel(BookingModel bookingModel)
         {
-            if (!await _context.Services.AnyAsync(service => service.ID == bookingModel.ServiceID))
+            var service = await _context.Services.SingleOrDefaultAsync(service =>
+                service.ID == bookingModel.ServiceID && service.TenantID == bookingModel.TenantID);
+            if (service == null)
             {
-                return NotFound($"Service with ID '{bookingModel.ServiceID}' was not found.");
+                return NotFound($"Service with ID '{bookingModel.ServiceID}' was not found for this tenant.");
             }
 
             if (bookingModel.statusID == Guid.Empty)
@@ -115,6 +114,18 @@ namespace Slotly.Server.Controllers
                 return NotFound($"Booking status with ID '{bookingModel.statusID}' was not found.");
             }
 
+            var requestedAddOnIds = bookingModel.AddOnIDs.Distinct().ToArray();
+            var addOns = await _context.ServiceAddOns
+                .Where(addOn => addOn.ServiceID == service.ID && requestedAddOnIds.Contains(addOn.ID))
+                .ToListAsync();
+            if (addOns.Count != requestedAddOnIds.Length)
+            {
+                return BadRequest("One or more selected add-ons do not belong to the selected service.");
+            }
+
+            bookingModel.AddOns = addOns;
+            bookingModel.Price = service.Price + addOns.Sum(addOn => addOn.Price);
+            bookingModel.Duration = service.Duration + addOns.Sum(addOn => addOn.Duration);
             _context.Bookings.Add(bookingModel);
             await _context.SaveChangesAsync();
 
@@ -137,9 +148,5 @@ namespace Slotly.Server.Controllers
             return NoContent();
         }
 
-        private bool BookingModelExists(Guid id)
-        {
-            return _context.Bookings.Any(e => e.ID == id);
-        }
     }
 }

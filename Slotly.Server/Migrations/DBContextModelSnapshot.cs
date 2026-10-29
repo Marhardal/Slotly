@@ -22,6 +22,21 @@ namespace Slotly.Server.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("BookingModelServiceAddOnsModel", b =>
+                {
+                    b.Property<Guid>("AddOnsID")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BookingsID")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("AddOnsID", "BookingsID");
+
+                    b.HasIndex("BookingsID");
+
+                    b.ToTable("BookingAddOns", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -224,11 +239,35 @@ namespace Slotly.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ClientEmail")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClientName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClientPhone")
+                        .HasColumnType("text");
+
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
+                    b.Property<int>("Duration")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric");
+
                     b.Property<Guid>("ServiceID")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("StaffID")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StaffName")
+                        .HasColumnType("text");
 
                     b.Property<Guid>("TenantID")
                         .HasColumnType("uuid");
@@ -408,6 +447,9 @@ namespace Slotly.Server.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<int>("Duration")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
@@ -447,6 +489,9 @@ namespace Slotly.Server.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
+
+                    b.Property<bool>("Popular")
+                        .HasColumnType("boolean");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
@@ -529,6 +574,21 @@ namespace Slotly.Server.Migrations
                             createdOn = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             updatedOn = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         });
+                });
+
+            modelBuilder.Entity("BookingModelServiceAddOnsModel", b =>
+                {
+                    b.HasOne("Slotly.Server.ServiceAddOnsModel", null)
+                        .WithMany()
+                        .HasForeignKey("AddOnsID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Slotly.Server.BookingModel", null)
+                        .WithMany()
+                        .HasForeignKey("BookingsID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

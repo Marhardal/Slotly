@@ -18,6 +18,8 @@ public class ServiceModel
 
     public int Duration { get; set; }
 
+    public bool Popular { get; set; }
+
     public DateTimeOffset createdOn { get; set; } = DateTimeOffset.UtcNow;
     
     public DateTimeOffset updatedOn { get; set; } = DateTimeOffset.UtcNow;

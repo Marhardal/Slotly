@@ -50,6 +50,11 @@ public class DBContext : IdentityDbContext<IdentityUser, IdentityRole, string>
         .HasForeignKey(s => s.ServiceID)
         .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<BookingModel>()
+        .HasMany(b => b.AddOns)
+        .WithMany(a => a.Bookings)
+        .UsingEntity(join => join.ToTable("BookingAddOns"));
+
         modelBuilder.Entity<CategoryModel>().HasData(
             CategorySeed.GetSeedData()
         );

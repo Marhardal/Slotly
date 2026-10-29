@@ -46,7 +46,7 @@
           <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
             <span class="text-slate-400">Service</span>
             <div class="font-bold text-white mt-1">{{ booking.serviceName }}</div>
-            <div class="text-indigo-400 font-semibold mt-0.5">${{ booking.price }} USD</div>
+            <div class="text-indigo-400 font-semibold mt-0.5">${{ Number(booking.pricing?.basePrice || booking.price).toFixed(2) }} USD</div>
           </div>
 
           <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
@@ -66,14 +66,13 @@
           </div>
         </div>
 
-        <!-- ITEMIZED TRANSACTION BILLING LEDGER -->
+        <!-- Booking price details -->
         <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-2">
           <div class="flex items-center justify-between pb-2 border-b border-slate-800">
             <span class="text-[11px] uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
               <Icon name="receipt" size="13" class="text-indigo-400" />
-              <span>Transaction & Payment Breakdown</span>
+              <span>Booking Price</span>
             </span>
-            <span class="font-mono text-indigo-300 text-[11px]">{{ booking.pricing?.transactionId || 'TXN-DIRECT' }}</span>
           </div>
 
           <div class="flex justify-between text-slate-300">
@@ -111,23 +110,13 @@
           </div>
 
           <div class="pt-2 border-t border-slate-800 flex justify-between font-bold text-white">
-            <span>Total Transaction Amount</span>
+            <span>Service and Add-ons Total</span>
             <span class="font-mono text-indigo-300 text-sm">${{ Number(booking.pricing?.grandTotal || booking.price).toFixed(2) }}</span>
           </div>
 
           <!-- Payment status summary -->
-          <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
-            <div class="text-slate-400">
-              Payment Method: <span class="text-white font-medium">{{ booking.pricing?.paymentMethod || 'Credit Card' }}</span>
-            </div>
-            <div>
-              <span v-if="booking.pricing?.balanceDue > 0" class="text-amber-400 font-semibold">
-                Deposit Paid: ${{ Number(booking.pricing?.depositAmount).toFixed(2) }} (Due: ${{ Number(booking.pricing?.balanceDue).toFixed(2) }})
-              </span>
-              <span v-else class="text-emerald-400 font-semibold">
-                Paid in Full (${{ Number(booking.pricing?.grandTotal || booking.price).toFixed(2) }})
-              </span>
-            </div>
+          <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400">
+            No payment has been collected for this booking request.
           </div>
         </div>
 
@@ -189,13 +178,17 @@ const props = defineProps({
   booking: Object
 })
 
-const emit = defineEmits(['close'])
+defineEmits(['close'])
 
-const { updateBookingStatus } = useSlotly()
+const { updateBookingStatus, showToast } = useSlotly()
 
-function setStatus(status) {
+async function setStatus(status) {
   if (props.booking) {
-    updateBookingStatus(props.booking.id, status)
+    try {
+      await updateBookingStatus(props.booking.id, status)
+    } catch (error) {
+      showToast('Could Not Update Booking', error.message, 'error')
+    }
   }
 }
 

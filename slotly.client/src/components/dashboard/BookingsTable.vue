@@ -46,7 +46,7 @@
               <th class="p-4">Client</th>
               <th class="p-4">Service & Specialist</th>
               <th class="p-4">Date & Time</th>
-              <th class="p-4">Transaction / Billing</th>
+              <th class="p-4">Booking Price</th>
               <th class="p-4">Status</th>
               <th class="p-4 text-right">Actions</th>
             </tr>
@@ -89,7 +89,7 @@
                 <div class="text-[11px] font-mono text-indigo-300 mt-0.5">{{ booking.time }} ({{ booking.duration }}m)</div>
               </td>
 
-              <!-- Transaction / Billing -->
+              <!-- Booking price -->
               <td class="p-4">
                 <div class="font-bold text-white font-mono">
                   ${{ Number(booking.pricing?.grandTotal || booking.price).toFixed(2) }}
@@ -100,6 +100,9 @@
                   </span>
                   <span v-else-if="booking.pricing?.paymentOption === 'in_person'" class="text-slate-400">
                     Pay at Venue
+                  </span>
+                  <span v-else-if="booking.pricing?.paymentOption === 'not_processed'" class="text-slate-400">
+                    Not collected
                   </span>
                   <span v-else class="text-emerald-400 font-medium">
                     ✓ Paid in Full
@@ -143,7 +146,7 @@
                   </button>
                   <button
                     v-if="booking.status === 'pending'"
-                    @click="updateBookingStatus(booking.id, 'confirmed')"
+                    @click="confirmBooking(booking)"
                     class="px-2 py-1 rounded-md text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
                   >
                     Confirm
@@ -176,10 +179,18 @@ import { useSlotly } from '../../composables/useSlotly'
 
 defineEmits(['selectBooking', 'openNewBooking'])
 
-const { currentTenant, currentBookings, updateBookingStatus } = useSlotly()
+const { currentTenant, currentBookings, updateBookingStatus, showToast } = useSlotly()
 
 const searchQuery = ref('')
 const statusFilter = ref('all')
+
+async function confirmBooking(booking) {
+  try {
+    await updateBookingStatus(booking.id, 'confirmed')
+  } catch (error) {
+    showToast('Could Not Update Booking', error.message, 'error')
+  }
+}
 
 const filteredBookings = computed(() => {
   return currentBookings.value.filter(b => {

@@ -5,7 +5,7 @@
       <!-- Revenue Card -->
       <div class="glass-card rounded-2xl p-5 border border-slate-800/80 hover:border-slate-700 transition-all">
         <div class="flex items-center justify-between text-slate-400">
-          <span class="text-xs font-medium">Estimated Revenue</span>
+          <span class="text-xs font-medium">Booked Service Value</span>
           <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
             <Icon name="dollar-sign" size="16" />
           </div>
@@ -13,9 +13,8 @@
         <div class="text-2xl font-bold text-white mt-2">
           ${{ computedStats.revenue.toLocaleString() }}
         </div>
-        <div class="flex items-center gap-1.5 text-xs text-emerald-400 mt-2 font-medium">
-          <span>+14.2%</span>
-          <span class="text-slate-500">vs last period</span>
+        <div class="flex items-center gap-1.5 text-xs text-slate-400 mt-2 font-medium">
+          <span>Payment has not been processed.</span>
         </div>
       </div>
 
@@ -168,32 +167,32 @@
           </button>
         </div>
 
-        <!-- Multi-Tenant Sync & System Status -->
+        <!-- External service integrations -->
         <div class="glass-card rounded-2xl p-6 border border-slate-800/80">
-          <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-3">Sync & Integrations</h4>
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-3">Integrations</h4>
           <div class="space-y-3 text-xs">
             <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
               <div class="flex items-center gap-2 text-slate-300">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="w-2 h-2 rounded-full bg-slate-500"></span>
                 <span>Google Calendar Sync</span>
               </div>
-              <span class="text-[11px] font-mono text-emerald-400">Connected</span>
+              <span class="text-[11px] font-mono text-slate-400">Not connected</span>
             </div>
 
             <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
               <div class="flex items-center gap-2 text-slate-300">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>Stripe Payment Gate</span>
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span>Payment Processing</span>
               </div>
-              <span class="text-[11px] font-mono text-emerald-400">Live</span>
+              <span class="text-[11px] font-mono text-amber-300">Not connected</span>
             </div>
 
             <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
               <div class="flex items-center gap-2 text-slate-300">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="w-2 h-2 rounded-full bg-slate-500"></span>
                 <span>SMS Reminders (Twilio)</span>
               </div>
-              <span class="text-[11px] font-mono text-emerald-400">Active</span>
+              <span class="text-[11px] font-mono text-slate-400">Not connected</span>
             </div>
           </div>
         </div>

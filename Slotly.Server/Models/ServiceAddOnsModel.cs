@@ -1,4 +1,6 @@
-﻿namespace Slotly.Server;
+using System.Text.Json.Serialization;
+
+namespace Slotly.Server;
 
 public class ServiceAddOnsModel
 {
@@ -12,9 +14,15 @@ public class ServiceAddOnsModel
 
     public decimal Price { get; set; }
 
+    public int Duration { get; set; }
+
     public DateTimeOffset createdOn { get; set; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset updatedOn { get; set; } = DateTimeOffset.UtcNow;
 
+    [JsonIgnore]
     public ServiceModel? Service { get; set; }
+
+    [JsonIgnore]
+    public ICollection<BookingModel>? Bookings { get; set; }
 }

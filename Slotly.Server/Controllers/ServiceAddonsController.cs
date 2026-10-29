@@ -22,9 +22,17 @@ namespace Slotly.Server.Controllers
 
         // GET: api/ServiceAddons
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ServiceAddOnsModel>>> GetServiceAddOns()
+        public async Task<ActionResult<IEnumerable<ServiceAddOnsModel>>> GetServiceAddOns(Guid? tenantId)
         {
-            return await _context.ServiceAddOns.ToListAsync();
+            var addOns = _context.ServiceAddOns.AsNoTracking();
+            if (tenantId.HasValue)
+            {
+                addOns = addOns.Where(addOn =>
+                    _context.Services.Any(service =>
+                        service.ID == addOn.ServiceID && service.TenantID == tenantId.Value));
+            }
+
+            return await addOns.ToListAsync();
         }
 
         // GET: api/ServiceAddons/5
@@ -51,9 +59,23 @@ namespace Slotly.Server.Controllers
                 return BadRequest();
             }
 
+            var existingAddOn = await _context.ServiceAddOns.FindAsync(id);
+            if (existingAddOn == null)
+            {
+                return NotFound();
+            }
+
             if (!await _context.Services.AnyAsync(service => service.ID == serviceAddOnsModel.ServiceID))
             {
                 return NotFound($"Service with ID '{serviceAddOnsModel.ServiceID}' was not found.");
+            }
+
+            if (await _context.Bookings.AnyAsync(booking => booking.AddOns.Any(addOn => addOn.ID == id)) &&
+                (existingAddOn.Name != serviceAddOnsModel.Name ||
+                 existingAddOn.Price != serviceAddOnsModel.Price ||
+                 existingAddOn.Duration != serviceAddOnsModel.Duration))
+            {
+                return Conflict("An add-on attached to an existing booking cannot change its price or duration.");
             }
 
             _context.Entry(serviceAddOnsModel).State = EntityState.Modified;
@@ -101,6 +123,12 @@ namespace Slotly.Server.Controllers
             if (serviceAddOnsModel == null)
             {
                 return NotFound();
+            }
+
+            if (await _context.Bookings.AnyAsync(booking =>
+                    booking.AddOns.Any(addOn => addOn.ID == id)))
+            {
+                return Conflict("An add-on attached to an existing booking cannot be deleted.");
             }
 
             _context.ServiceAddOns.Remove(serviceAddOnsModel);
