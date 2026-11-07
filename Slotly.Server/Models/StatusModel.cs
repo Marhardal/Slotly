@@ -24,3 +24,18 @@ public class StatusModel
         Payments,
         Bookings
     }
+
+    public class StatusDTO
+{
+    public Guid ID { get; set; }
+
+    public string? Name { get; set; }
+
+    public Category Category { get; set; }
+
+    public string? Description { get; set; }
+
+    public string? catName { get; set; }
+
+    public DateTimeOffset updatedOn { get; set; }
+}

@@ -16,9 +16,24 @@ namespace Slotly.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<StatusModel>>> GetStatuses()
+        public async Task<ActionResult<IEnumerable<StatusDTO>>> GetStatuses()
         {
-            return await _context.Statuses.ToListAsync();
+            var statuses = _context.Statuses.AsNoTracking().AsQueryable().Select(s => new StatusDTO
+            {
+                ID = s.ID,
+                catName = s.Category.ToString(),
+                Category = s.Category,
+                Name = s.Name,
+                Description = s.Description,
+                updatedOn = s.updatedOn
+            });
+
+            if (!statuses.Any())
+            {
+                return NotFound("No statuses found.");
+            }
+
+            return await statuses.ToListAsync();
         }
 
         [HttpGet("{id}")]

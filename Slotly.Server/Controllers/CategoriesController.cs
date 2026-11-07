@@ -15,9 +15,23 @@ namespace Slotly.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CategoryModel>>> GetCategories()
+        public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategories()
         {
-            return await _context.Categories.ToListAsync();
+            var categories = _context.Categories.AsNoTracking().AsQueryable().Select(c => new CategoryDTO
+            {
+                ID = c.ID,
+                Name = c.Name,
+                Category = c.Category,
+                catName = c.Category.ToString(),
+                Description = c.Description,
+                updatedOn = c.updatedOn
+            });
+
+            if (!categories.Any())
+            {
+                return NotFound("No categories found.");
+            }
+            return await categories.ToListAsync();
         }
 
         [HttpGet("{id}")]

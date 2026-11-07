@@ -22,3 +22,18 @@ public enum Categories
 {
     Services
 };
+
+public record CategoryDTO
+{
+    public Guid ID { get; set; }
+
+    public string? Name { get; set; }
+
+    public Categories Category { get; set; }
+
+    public string catName { get; set; }
+
+    public string? Description { get; set; }
+
+    public DateTimeOffset updatedOn { get; set; }
+}
