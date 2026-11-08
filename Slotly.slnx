@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Slotly.Tests/">
+    <Project Path="Slotly.Tests/Tests.csproj" />
+  </Folder>
   <Project Path="slotly.client/slotly.client.esproj">
     <Build />
     <Deploy />
