@@ -27,6 +27,9 @@ builder.Services.AddDbContextFactory<DBContext>(
     .AddEntityFrameworkStores<DBContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<DBContext>();   // actually queries Postgres
+
 
 // Add services to the container.
 
@@ -62,6 +65,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapFallbackToFile("/index.html");
+
+app.MapHealthChecks("/health");
 
 app.Run();
 

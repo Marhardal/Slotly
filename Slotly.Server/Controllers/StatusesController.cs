@@ -69,7 +69,8 @@ namespace Slotly.Server.Controllers
                 return Conflict("A status assigned to bookings cannot change category.");
             }
 
-            _context.Entry(status).State = EntityState.Modified;
+            // _context.Entry(status).State = EntityState.Modified;
+            _context.Entry(existingStatus).CurrentValues.SetValues(status);
 
             try
             {
