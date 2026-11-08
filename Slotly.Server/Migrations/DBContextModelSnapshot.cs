@@ -17,7 +17,7 @@ namespace Slotly.Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -438,6 +438,109 @@ namespace Slotly.Server.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Slotly.Server.LocationHoursModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeOnly>("Close")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Day")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("LocationID")
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeOnly>("Open")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<DateTimeOffset>("UpdatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LocationID", "Day")
+                        .IsUnique();
+
+                    b.ToTable("Hours");
+                });
+
+            modelBuilder.Entity("Slotly.Server.LocationStaffsModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("LocationID")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantID")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserID")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LocationID");
+
+                    b.HasIndex("UserID", "LocationID")
+                        .IsUnique();
+
+                    b.ToTable("Staffs");
+                });
+
+            modelBuilder.Entity("Slotly.Server.LocationsModel", b =>
+                {
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeOnly>("Close")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<string>("Coordinates")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("text");
+
+                    b.Property<TimeOnly>("Open")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantID")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("createdOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("updatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("TenantID");
+
+                    b.ToTable("Locations");
+                });
+
             modelBuilder.Entity("Slotly.Server.ServiceAddOnsModel", b =>
                 {
                     b.Property<Guid>("ID")
@@ -576,6 +679,32 @@ namespace Slotly.Server.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Slotly.Server.TenantModel", b =>
+                {
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("createdOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("updatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Tenants");
+                });
+
             modelBuilder.Entity("BookingModelServiceAddOnsModel", b =>
                 {
                     b.HasOne("Slotly.Server.ServiceAddOnsModel", null)
@@ -661,6 +790,46 @@ namespace Slotly.Server.Migrations
                     b.Navigation("Status");
                 });
 
+            modelBuilder.Entity("Slotly.Server.LocationHoursModel", b =>
+                {
+                    b.HasOne("Slotly.Server.LocationsModel", "Locations")
+                        .WithMany("Hours")
+                        .HasForeignKey("LocationID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Locations");
+                });
+
+            modelBuilder.Entity("Slotly.Server.LocationStaffsModel", b =>
+                {
+                    b.HasOne("Slotly.Server.LocationsModel", "Locations")
+                        .WithMany("Staffs")
+                        .HasForeignKey("LocationID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Locations");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Slotly.Server.LocationsModel", b =>
+                {
+                    b.HasOne("Slotly.Server.TenantModel", "Tenant")
+                        .WithMany("Locations")
+                        .HasForeignKey("TenantID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("Slotly.Server.ServiceAddOnsModel", b =>
                 {
                     b.HasOne("Slotly.Server.ServiceModel", "Service")
@@ -688,6 +857,13 @@ namespace Slotly.Server.Migrations
                     b.Navigation("Services");
                 });
 
+            modelBuilder.Entity("Slotly.Server.LocationsModel", b =>
+                {
+                    b.Navigation("Hours");
+
+                    b.Navigation("Staffs");
+                });
+
             modelBuilder.Entity("Slotly.Server.ServiceModel", b =>
                 {
                     b.Navigation("Bookings");
@@ -698,6 +874,11 @@ namespace Slotly.Server.Migrations
             modelBuilder.Entity("Slotly.Server.StatusModel", b =>
                 {
                     b.Navigation("Bookings");
+                });
+
+            modelBuilder.Entity("Slotly.Server.TenantModel", b =>
+                {
+                    b.Navigation("Locations");
                 });
 #pragma warning restore 612, 618
         }
